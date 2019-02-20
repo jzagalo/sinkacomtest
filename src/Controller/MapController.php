@@ -7,6 +7,12 @@ use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+
+
 class MapController extends Controller {
 
 	/**
@@ -15,7 +21,8 @@ class MapController extends Controller {
 	 */
 
 	public function index() {
-		$cordinates = array();
+		$cordinates = $locations = array();
+
 
 		$csv = explode("\n", file_get_contents('./../fixtures/Testdaten-Node-csv.csv'));
 		$csv = array_splice($csv, 1);
@@ -30,13 +37,26 @@ class MapController extends Controller {
 
 		$scaledCordinates = array();
 		foreach ($cleanedCoordinates as $key=>$value) {
-			$scaledCordinates[$key][0] = $value[0];
+			$scaledCordinates[$key][0] = $value[0];			
 			$scaledCordinates[$key][1] = ((float)$value[1] -3559000);
-			$scaledCordinates[$key][2] = ((float)$value[2] - 5330300);	
+			$scaledCordinates[$key][2] = ((float)$value[2] - 5330300);
+
+			$locations[$value[0]] = $value[0];	
 		}
 
+		$form = $this->createFormBuilder()
+            ->add('From', ChoiceType::class, [
+			    'choices'  => $locations,
+			])
+			->add('To', ChoiceType::class, [
+			    'choices'  => $locations,
+			])
+            ->getForm();
+
+
 		return $this->render('maps/index.html.twig', array(
-		 'plans' =>	$scaledCordinates
+		 'plans' =>	$scaledCordinates,
+		 'form' => $form->createView()
 		));
 	}
 }
