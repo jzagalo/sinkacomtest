@@ -16,13 +16,13 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 class MapController extends Controller {
 
 	/**
-	 * @Route("/")
-	 * @Method("GET")
+	 * @Route("/" , name="submit_route")
+	 * @Method({"GET", "POST"})
 	 */
 
-	public function index() {
-		$cordinates = $locations = array();
+	public function index(Request $request) {
 
+		$cordinates = $locations = array();		
 
 		$csv = explode("\n", file_get_contents('./../fixtures/Testdaten-Node-csv.csv'));
 		$csv = array_splice($csv, 1);
@@ -36,6 +36,7 @@ class MapController extends Controller {
 		$cleanedCoordinates = array_splice($cordinates, 0, sizeof($cordinates)-1);
 
 		$scaledCordinates = array();
+
 		foreach ($cleanedCoordinates as $key=>$value) {
 			$scaledCordinates[$key][0] = $value[0];			
 			$scaledCordinates[$key][1] = ((float)$value[1] -3559000);
@@ -53,11 +54,28 @@ class MapController extends Controller {
 			])
             ->getForm();
 
+		if($request->getMethod() === 'GET') {	
 
-		return $this->render('maps/index.html.twig', array(
-		 'plans' =>	$scaledCordinates,
-		 'form' => $form->createView()
-		));
+			return $this->render('maps/index.html.twig', array(
+			 'plans' =>	$scaledCordinates,
+			 'form' => $form->createView()
+			));
+
+		} else {
+
+		   $formData = $request->getContent();
+		   var_dump($formData);
+
+		   return $this->json(array('username' => 'jane.doe'));
+			/*$form->handleRequest($request);
+
+	        if ($form->isSubmitted() && $form->isValid()) {
+	            $data = $form->getData();
+
+	            
+	        }*/
+
+		}
 	}
 }
 

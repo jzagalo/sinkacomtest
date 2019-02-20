@@ -13,3 +13,31 @@
 	{% endfor %}
 	</div>
 {% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function(){
+	$('form').change(function(){
+		var from = $('#form_From').val();
+		var To = $('#form_To').val();
+
+		var formData = { to : To, from: from };
+
+		$.ajax({
+		 type: 'POST',
+		 url: '{{ path('submit_route') }}',
+		 data: JSON.stringify(formData),
+		 dataType: 'json',
+		 success: function(msg){
+		  console.log('Success');
+		 },
+		 error: function(xhr){
+		   console.log('Failure');
+		 }
+		})
+	});
+
+});
+
+</script>
+{% endblock %}
