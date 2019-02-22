@@ -19,9 +19,9 @@
 $(document).ready(function(){
 	$('form').change(function(){
 		var from = $('#form_From').val();
-		var To = $('#form_To').val();
+		var to = $('#form_To').val();
 
-		var formData = { to : To, from: from };
+		var formData = {to : to, from: from };
 
 		$.ajax({
 		 type: 'POST',
@@ -40,4 +40,4 @@ $(document).ready(function(){
 });
 
 </script>
-{% endblock %}
+{% endblock %} 

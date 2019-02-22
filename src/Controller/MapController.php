@@ -64,9 +64,8 @@ class MapController extends Controller {
 		} else {
 
 		   $formData = $request->getContent();
-		   var_dump($formData);
-
-		   return $this->json(array('username' => 'jane.doe'));
+		   $arrayData = json_decode($formData, true);
+		   return $this->json($arrayData);
 			/*$form->handleRequest($request);
 
 	        if ($form->isSubmitted() && $form->isValid()) {
