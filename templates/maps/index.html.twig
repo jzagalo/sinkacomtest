@@ -5,6 +5,9 @@
 {% block body %}
 	<h1> Articles </h1>
 	{{ form(form)}}
+
+	{{ minX }}
+	{{ minY }}
 	<div style="position:relative; height: 600px; width: 1000px">	
 	{% for key, value in plans %}
 		{% set data = value|slice(1,2) %} 		
@@ -29,7 +32,7 @@ $(document).ready(function(){
 		 data: JSON.stringify(formData),
 		 dataType: 'json',
 		 success: function(msg){
-		  console.log('Success');
+		  console.log(msg);
 		 },
 		 error: function(xhr){
 		   console.log('Failure');

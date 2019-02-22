@@ -22,50 +22,71 @@ class MapController extends Controller {
 
 	public function index(Request $request) {
 
-		$cordinates = $locations = array();		
+		$cordinates = $scaledCordinates = $locations = array();		
 
 		$csv = explode("\n", file_get_contents('./../fixtures/Testdaten-Node-csv.csv'));
 		$csv = array_splice($csv, 1);
-		$minX = 9999999; $minY = 9999999;
+
+		
+		
 
 		foreach ($csv as $key => $value) {
 		  $data = explode(";", $value);	
-		  $cordinates[$data[0]] = (array)array_splice($data, 1, 3);		 
+
+		  $cordinates[$data[0]] = array_splice($data, 1, 3);		 
 		}			
 		
-		$cleanedCoordinates = array_splice($cordinates, 0, sizeof($cordinates)-1);
-
-		$scaledCordinates = array();
+		$cleanedCoordinates = array_splice($cordinates, 0, sizeof($cordinates)-1);				
+        list($minX, $minY) = $this->getMinimunCordinates($cleanedCoordinates);
+      
 
 		foreach ($cleanedCoordinates as $key=>$value) {
-			$scaledCordinates[$key][0] = $value[0];			
-			$scaledCordinates[$key][1] = ((float)$value[1] -3559000);
-			$scaledCordinates[$key][2] = ((float)$value[2] - 5330300);
+			$scaledCordinates[$key][0] = $value[0];	
+			$xVal = (float)$value[1];
+			$yVal = (float)$value[2];			
 
-			$locations[$value[0]] = $value[0];	
+			$scaledCordinates[$key][1] = ($xVal - $minX);
+			$scaledCordinates[$key][2] = ($yVal - $minY);
+
+			$locations[$value[0]] = $key + 1;	
 		}
 
-		$form = $this->createFormBuilder()
-            ->add('From', ChoiceType::class, [
-			    'choices'  => $locations,
-			])
-			->add('To', ChoiceType::class, [
-			    'choices'  => $locations,
-			])
-            ->getForm();
+		$form = $this->createLocationsForm($locations);	
 
 		if($request->getMethod() === 'GET') {	
-
 			return $this->render('maps/index.html.twig', array(
 			 'plans' =>	$scaledCordinates,
-			 'form' => $form->createView()
+			 'form' => $form->createView(),
+			 'minY' => $minY, 
+			 'minX' => $minX
+
 			));
 
 		} else {
 
 		   $formData = $request->getContent();
-		   $arrayData = json_decode($formData, true);
-		   return $this->json($arrayData);
+		   $arrayFormData = json_decode($formData, true);
+		   $routes = array_values($arrayFormData);
+		   $routes = array_map("intval", $routes);
+		   $minRoute = min($routes); 
+		   $maxRoute = max($routes); 		   
+		   $range = range($minRoute, $maxRoute);
+
+
+           $testdatenPipes = $this->fetchNodePipes();
+          
+		   $filteredPipes = array_filter($testdatenPipes, function($pipes) use($minRoute, $maxRoute) {
+		   	
+		   	   $values = array_values($pipes);
+
+		   	   $quelle =(float) $values[0];
+		   	   $ziel = (float) $values[1];		   
+
+		   	  // return in_array($ziel, $range, true) || in_array($quelle, $range, true);
+		   	   return ($quelle === $minRoute && $ziel === $maxRoute);
+		   });
+
+		   return $this->json($filteredPipes);
 			/*$form->handleRequest($request);
 
 	        if ($form->isSubmitted() && $form->isValid()) {
@@ -75,6 +96,57 @@ class MapController extends Controller {
 	        }*/
 
 		}
+	}
+
+	private function getMinimunCordinates($cordinates) {
+		$minX = 9999999; $minY = 9999999;
+
+		foreach ($cordinates as $key=>$value) {		
+			$xVal = (float)$value[1];
+			$yVal = (float)$value[2];
+
+			if($yVal < $minY){
+				$minY = $yVal;
+			}
+
+			if($xVal < $minX){
+				$minX = $xVal;
+			}
+		}
+
+		return array($minX, $minY);
+	}
+
+	public function createLocationsForm($locations) {
+		$form = $this->createFormBuilder()
+            ->add('From', ChoiceType::class, [
+			    'choices'  => $locations,
+			])
+			->add('To', ChoiceType::class, [
+			    'choices'  => $locations,
+			])
+            ->getForm();
+
+        return $form;
+	}
+
+	private function fetchNodePipes(){
+		$csv = explode("\n", file_get_contents('./../fixtures/Testdaten-Pipe-csv.csv'));
+		$csv = array_splice($csv, 1);
+		$data = $cordinates = array();
+
+		foreach ($csv as $key => $value) {
+		  $data = explode(";", $value);	
+
+		  $cordinates[$data[0]] = array_splice($data, 1, 2);		 
+		}
+
+		$cordinates = array_splice($cordinates, 0, sizeof($cordinates)-1);
+		return $cordinates;
+	}
+
+	private function filterRoutes(){
+
 	}
 }
 
