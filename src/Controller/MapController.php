@@ -25,10 +25,7 @@ class MapController extends Controller {
 		$cordinates = $scaledCordinates = $locations = array();		
 
 		$csv = explode("\n", file_get_contents('./../fixtures/Testdaten-Node-csv.csv'));
-		$csv = array_splice($csv, 1);
-
-		
-		
+		$csv = array_splice($csv, 1);		
 
 		foreach ($csv as $key => $value) {
 		  $data = explode(";", $value);	
@@ -71,20 +68,31 @@ class MapController extends Controller {
 		   $minRoute = min($routes); 
 		   $maxRoute = max($routes); 		   
 		   $range = range($minRoute, $maxRoute);
+		   $isDirectRoute = $isCombinedRoute = false;
+		   $directRoute = $combineRoutes = [];
 
 
-           $testdatenPipes = $this->fetchNodePipes();
-          
-		   $filteredPipes = array_filter($testdatenPipes, function($pipes) use($minRoute, $maxRoute) {
+           $testdatenPipes = $this->fetchNodePipes();          
+		   $filteredPipes = array_filter($testdatenPipes, function($pipes) use($minRoute,
+		    $range, $maxRoute, $directRoute, $isCombinedRoute, $isDirectRoute, $combineRoutes ) {
 		   	
 		   	   $values = array_values($pipes);
 
 		   	   $quelle =(float) $values[0];
 		   	   $ziel = (float) $values[1];		   
 
-		   	  // return in_array($ziel, $range, true) || in_array($quelle, $range, true);
-		   	   return ($quelle === $minRoute && $ziel === $maxRoute);
+		   	  /* if(in_array($ziel, $range) && in_array($quelle, $range)) {
+		   	   	    $directRoute = true;
+		   	   		return in_array($ziel, $range) && in_array($quelle, $range); 
+		   	   } elseif (in_array($ziel, $range) || in_array($quelle, $range)) {
+		   	   		return $quelle === $ziel;
+		   	   }*/
+
+		   	   return (in_array($ziel, $range) && in_array($quelle, $range));
+		   	   //return ($quelle >= $minRoute && $ziel <= $maxRoute);
 		   });
+
+
 
 		   return $this->json($filteredPipes);
 			/*$form->handleRequest($request);
@@ -145,9 +153,6 @@ class MapController extends Controller {
 		return $cordinates;
 	}
 
-	private function filterRoutes(){
-
-	}
 }
 
 
